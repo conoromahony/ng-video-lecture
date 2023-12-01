@@ -16,7 +16,8 @@ n_layer = 6
 dropout = 0.2
 # ------------
 
-torch.manual_seed(1337)
+# CONOR: Set the random number generator seed, so we the same numbers when we run this code that Andrej ows in his videos.
+torch.manual_seed(1337) 
 
 # wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
 with open('input.txt', 'r', encoding='utf-8') as f:
@@ -40,8 +41,18 @@ val_data = data[n:]
 # data loading
 def get_batch(split):
     # generate a small batch of data of inputs x and targets y
+    # CONOR: If the split is training data (i.e. 'train'), set the data array to train_data (i.e. the training data), otherwise set it to val_data (i.e. the validation data).
     data = train_data if split == 'train' else val_data
+    # CONOR: Generate batch_size random numbers. These are the random offsets into the data array for the "chunks" of data to sample.
     ix = torch.randint(len(data) - block_size, (batch_size,))
+    # CONOR: x is the first block_size number of characters, for each of the random offsets in ix. This gives us the "input" chunks of data.
+    # CONOR: y is the chunk of data offset by 1. This gives us the "target" chunks of data.
+    # CONOR: The first token in y is the target for an input that consists only of the first token in x.
+    # CONOR: The second token in y is the target for an input that consists of the first two tokens in x.
+    # CONOR: And so on.
+    # CONOR: Remember this GPT tokenizes based on characters, not portions of words.
+    # CONOR: Each of these one-dimensional tensors will be stacked, becoming a row in a batch_size x block_size tensor.
+    # CONOR: This approach essentially gives us batch_size (64) x block_size (256) samples from the data (i.e. 16,384 samples).
     x = torch.stack([data[i:i+block_size] for i in ix])
     y = torch.stack([data[i+1:i+block_size+1] for i in ix])
     x, y = x.to(device), y.to(device)
